@@ -20,15 +20,20 @@ echo 输出目录: %OUTPUT_DIR%
 echo ffmpeg 路径: %FFMPEG_PATH%
 echo ---------------------------------------
 
-REM 如果 ffmpeg.exe 不存在，则从项目附带的压缩包解压
+REM 合并项目附带的 FFmpeg 分卷压缩包并解压
 if not exist "%FFMPEG_PATH%" (
-    if not exist "%FFMPEG_ZIP%" (
-        echo [错误] 未找到 ffmpeg.exe 或 ffmpeg.zip
-        echo 请确认项目文件完整，并将 ffmpeg.zip 放在脚本同级目录下
+    if not exist "%SCRIPT_DIR%ffmpeg.zip.part-00" (
+        echo [错误] 未找到 ffmpeg.exe 或 FFmpeg 压缩包分卷
         pause
         exit /b
     )
-    echo 未找到 ffmpeg.exe，正在从 ffmpeg.zip 解压...
+    echo 正在合并并解压 FFmpeg 压缩包...
+    copy /b /y "%SCRIPT_DIR%ffmpeg.zip.part-00"+"%SCRIPT_DIR%ffmpeg.zip.part-01"+"%SCRIPT_DIR%ffmpeg.zip.part-02"+"%SCRIPT_DIR%ffmpeg.zip.part-03" "%FFMPEG_ZIP%" >nul
+    if errorlevel 1 (
+        echo [错误] 合并 FFmpeg 压缩包失败
+        pause
+        exit /b
+    )
     powershell -NoProfile -Command "Expand-Archive -LiteralPath $env:FFMPEG_ZIP -DestinationPath $env:SCRIPT_DIR -Force -ErrorAction Stop"
     if not exist "%FFMPEG_PATH%" (
         echo [错误] ffmpeg.zip 解压失败

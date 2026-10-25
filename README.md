@@ -15,7 +15,7 @@
 ```text
 mp4_to_mp3_win/
 ├── extract_mp3.bat   # 转换入口，双击运行
-├── ffmpeg.zip        # 压缩后的 Windows 64 位 FFmpeg
+├── ffmpeg.zip.part-* # 分卷的 Windows 64 位 FFmpeg 压缩包
 ├── mp4/              # 输入目录：将待转换的 MP4 放在这里
 ├── convert_output/   # 输出目录：生成的 MP3 保存在这里
 └── README.md
@@ -26,16 +26,16 @@ mp4_to_mp3_win/
 ## 运行要求
 
 - Windows 64 位系统，能够运行附带的 FFmpeg；自动解压需要 Windows PowerShell 5.0 或更高版本。
-- 保持 `extract_mp3.bat` 和 `ffmpeg.zip`（或已解压的 `ffmpeg.exe`）位于同一目录。
+- 保持 `extract_mp3.bat` 和全部 `ffmpeg.zip.part-*` 文件（或已解压的 `ffmpeg.exe`）位于同一目录。
 - 确保存在 `mp4` 输入文件夹，且输出位置有写入权限和足够空间。
 
 无需安装 Python、Node.js，也无需单独配置 FFmpeg 的环境变量。当前提供的是 Windows 批处理脚本和 FFmpeg 压缩包，不能直接在 macOS 或 Linux 上运行。
 
 ## 获取项目
 
-通过 Git 克隆或 GitHub 的 Download ZIP 获取项目后，确认 `ffmpeg.zip` 位于 `extract_mp3.bat` 同级目录。首次运行脚本时，如果找不到 `ffmpeg.exe`，脚本会使用 Windows PowerShell 自动解压 `ffmpeg.zip`；之后会直接复用已解压的 `ffmpeg.exe`。
+通过 Git 克隆或 GitHub 的 Download ZIP 获取项目后，确认 `ffmpeg.zip.part-00` 到 `ffmpeg.zip.part-03` 都位于 `extract_mp3.bat` 同级目录。首次运行脚本时，如果找不到 `ffmpeg.exe`，脚本会先合并分卷，再使用 Windows PowerShell 自动解压；之后会直接复用已解压的 `ffmpeg.exe`。
 
-压缩包约为 65 MB，解压后的 `ffmpeg.exe` 约为 183 MB。自动解压失败时，可先手动解压 `ffmpeg.zip`，确保 `ffmpeg.exe` 与 `extract_mp3.bat` 位于同一目录。解压后的 `ffmpeg.exe` 已加入 `.gitignore`，不会被重复提交。
+前三个分卷各为 20 MiB，最后一个约为 5.3 MiB，合并后的压缩包约为 65 MiB，解压后的 `ffmpeg.exe` 约为 183 MiB。自动解压失败时，可按编号顺序合并分卷后手动解压，确保 `ffmpeg.exe` 与 `extract_mp3.bat` 位于同一目录。合并后的 `ffmpeg.zip` 和解压后的 `ffmpeg.exe` 已加入 `.gitignore`，不会被重复提交。
 
 ## 快速使用
 
@@ -63,7 +63,7 @@ extract_mp3.bat
 
 ## 工作原理
 
-脚本先检查 FFmpeg 是否存在，缺失时从 `ffmpeg.zip` 解压，再检查输入目录，按需创建输出目录，然后循环调用以下命令：
+脚本先检查 FFmpeg 是否存在，缺失时合并分卷并解压，再检查输入目录，按需创建输出目录，然后循环调用以下命令：
 
 ```bat
 "%FFMPEG_PATH%" -y -i "%%f" -vn -acodec libmp3lame -q:a 2 "%OUTPUT_DIR%\%%~nf.mp3"
@@ -104,8 +104,8 @@ set "OUTPUT_DIR=D:\Audio"
 
 | 问题 | 检查方式 |
 | --- | --- |
-| 提示未找到 `ffmpeg.exe` 或 `ffmpeg.zip` | 确认压缩包或已解压的程序与脚本位于同一目录，或修改 `FFMPEG_PATH` 指向实际位置。 |
-| 提示 `ffmpeg.zip` 解压失败 | 检查压缩包是否完整、脚本目录是否可写，也可手动解压后重试。 |
+| 提示未找到 `ffmpeg.exe` 或压缩包分卷 | 确认 `ffmpeg.zip.part-00` 到 `ffmpeg.zip.part-03` 与脚本位于同一目录，或修改 `FFMPEG_PATH` 指向实际位置。 |
+| 提示压缩包合并或解压失败 | 检查四个分卷是否完整、脚本目录是否可写，也可手动合并解压后重试。 |
 | 提示未找到 `mp4` 输入目录 | 在脚本旁创建 `mp4` 文件夹，或修改 `SOURCE_DIR`。 |
 | 视频没有被转换 | 确认文件扩展名为 `.mp4`，并直接放在输入目录中；脚本不递归扫描子目录。 |
 | FFmpeg 报错或没有生成 MP3 | 查看窗口中的 FFmpeg 日志，检查视频是否有音轨、文件能否正常读取，以及输出目录是否可写。 |
